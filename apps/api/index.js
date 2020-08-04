@@ -70,28 +70,27 @@ function main() {
    *  quota:        per run: 1 quota
    *                daily:   1440 quota
    */
-  schedule.scheduleJob('video-data-live', '7 * * * * *', video.live);
+  schedule.scheduleJob('video-data-live', '9 * * * * *', video.live);
 
   /**
    * video-info-stats
-   * executes:      once every minute at 3-second mark
+   * executes:      once every minute at 5-second mark
    * runs:          once if new videos exist
    * function:      grab video stats
    * youtube?       yes
    * quota:         per run: 1 quota
    *                daily:   upto 1440 quota
    */
-  schedule.scheduleJob('video-data-info', '3 * * * * *', video.info);
+  schedule.scheduleJob('video-data-info', '7 * * * * *', video.info);
 
   /**
    * xml-crawler
-   *  executes:     once every minute at 55-second mark
-   *  runs:         once and cycles through each group
+   *  executes:     3 times every minute at 3, 23, and 43-second mark
+   *  runs:         once and crawls x channels per run
    *  function:     fetches latest videos
    *  youtube?      no
-   *  additional:   please add google pubsub
    */
-  schedule.scheduleJob('xml-crawler', '55 * * * * *', xmlCrawler);
+  schedule.scheduleJob('xml-crawler', '3,23,43 * * * * *', xmlCrawler);
 
 }
 
