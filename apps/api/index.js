@@ -39,10 +39,11 @@ async function init() {
   const videoScraper = require('./video-init');
   const [videosUpdated = 0, missingVideos = 0] = await videoScraper();
 
-  logger.app('done! you can now start the api with \'npm start\'.');
+  console.log();
   logger.api.channelScraper('updated %d out of %d channels', channelsUpdated, channelCount);
   logger.api.channelInfo('got info for %d channels', channelInfos);
   logger.api.videoInit('updated %d videos, missed %d', videosUpdated, missingVideos);
+  logger.app('done! you can now start the api with \'npm start\'.');
 
   process.exit();
 }
@@ -63,34 +64,34 @@ function main() {
 
   /**
    * video-info-live
-   *  executes:     once every minute at 7-second mark
+   *  executes:     once every minute at 11-second mark
    *  runs:         once and gets 50 videos
    *  function:     updates video data
    *  youtube?      yes
    *  quota:        per run: 1 quota
    *                daily:   1440 quota
    */
-  schedule.scheduleJob('video-data-live', '9 * * * * *', video.live);
+  schedule.scheduleJob('video-data-live', '11 * * * * *', video.live);
 
   /**
    * video-info-stats
-   * executes:      once every minute at 5-second mark
+   * executes:      once every minute at 9-second mark
    * runs:          once if new videos exist
    * function:      grab video stats
    * youtube?       yes
    * quota:         per run: 1 quota
    *                daily:   upto 1440 quota
    */
-  schedule.scheduleJob('video-data-info', '7 * * * * *', video.info);
+  schedule.scheduleJob('video-data-info', '9 * * * * *', video.info);
 
   /**
    * xml-crawler
-   *  executes:     3 times every minute at 3, 23, and 43-second mark
-   *  runs:         once and crawls x channels per run
+   *  executes:     3 times every minute at 3, 5, and 7-second mark
+   *  runs:         once and crawls 1/3 of all channels per run
    *  function:     fetches latest videos
    *  youtube?      no
    */
-  schedule.scheduleJob('xml-crawler', '3,23,43 * * * * *', xmlCrawler);
+  xmlCrawler.init();
 
 }
 
