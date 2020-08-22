@@ -83,7 +83,7 @@ async function main(group) {
   logger.api.channelScraper('ran youtube:playlistItems %d times.', timesRan);
 }
 
-function videoFetcher(playlistId, pageToken) {
+function videoFetcher(playlistId, pageToken = '') {
   logger.api.helpers.channelScraper(
     'fetching playlist %s with token %s...',
     playlistId,
@@ -91,16 +91,16 @@ function videoFetcher(playlistId, pageToken) {
   );
 
   timesRan++;
-  return youtube.playlistItems
-    .list({
+  return youtube
+    .playlistItems({
       part: 'snippet',
       fields: 'nextPageToken,items(snippet(channelId,title,resourceId/videoId))',
       playlistId,
-      maxResults: 50,
       pageToken,
+      maxResults: 50,
       hl: 'ja'
     })
-    .then(({ data }) => [data.items, data.nextPageToken, 'ok'])
+    .then(data => [data.items, data.nextPageToken, 'ok'])
     .catch(({ message }) => {
       logger.api.helpers.channelScraper('!!! threw an error: %s', message);
       return [[]];

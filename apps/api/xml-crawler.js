@@ -1,12 +1,9 @@
-const { api_data, logger, TEMPLATE } = require('./consts');
+const { api_data, logger, memcache, TEMPLATE } = require('./consts');
 const schedule = require('node-schedule');
 const node_fetch = require('node-fetch');
 
 const fetch = url => node_fetch(url).then(res => res.text());
-const baseURL = 'https://www.youtube.com/feeds/videos.xml?channel_id=';
 const re = /<yt:videoId>(.*)<.*\n.*<yt:channelId>(.*)<.*\n.*<title>(.*)<\/title>(?:\n.*){0,10}<published>(.*)</g;
-
-const cachedVideos = {};
 
 module.exports = {
   'init': () => api_data.channels
@@ -23,17 +20,18 @@ module.exports = {
  * @param {{youtube: String, from: String}} data    - channel data
  */
 async function crawl({ youtube, from }) {
-  const xmlFeeds = await fetch(baseURL + youtube);
+  const xmlFeeds = await fetch(getXMLLink(youtube));
   const videoFeeds = parseXML(xmlFeeds);
 
+  const latestTimestamp = await memcache.get(youtube) || 0;
   const newEntries = videoFeeds.filter(feed =>
-    feed.timestamp > (cachedVideos[youtube] || 0)
+    feed.timestamp > latestTimestamp
   );
 
   if (!newEntries.length) return;
 
   logger.api.xmlCrawler('found %d new videos from %s', newEntries.length, youtube);
-  cachedVideos[youtube] = newEntries[0].timestamp;
+  memcache.save(youtube, newEntries[0].timestamp, 3600 * 4);
   saveVideos(youtube, from, newEntries);
 }
 
@@ -66,8 +64,12 @@ function saveVideos(youtube, group, videos) {
   ));
 }
 
+function getXMLLink(id) {
+  return `https://www.youtube.com/feeds/videos.xml?channel_id=${id}&t=${Date.now()}`;
+}
+
 function createJob(data) {
-  return schedule.scheduleJob(`${data._id % 3 * 2 + 3} * * * * *`, crawl.bind(null, data));
+  return schedule.scheduleJob('1 * * * * *', crawl.bind(null, data));
 }
 
 function parseXML(xml) {
